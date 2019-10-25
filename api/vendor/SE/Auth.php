@@ -42,77 +42,22 @@ class Auth extends Base
         }
     }
 
-    /**
-     * @param array $data
-     * @return null
-     */
-    public function getAuthData($data = array())
-    {
-        /*
-        $url = AUTH_SERVER . "/api/2/Auth/Register.api";
-        $ch = curl_init($url);
-        $data["project"] =  str_replace(".e-stile.ru", "", HOSTNAME);
-        $apiData = json_encode($data);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $apiData);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-                'Content-Type: application/json',
-                'Content-Length: ' . strlen($apiData))
-        );
-        $result = json_decode(curl_exec($ch), 1);
-        */
-
-        // Врменнно
-        //writeLog($data);
-        $admin_login = 'admin';
-        $admin_password = 'admin';
-
-
-        if ($admin_login == $this->input["login"] && md5($this->input["login"] . $admin_password) == $this->input["hash"]) {
-            $result["status"] = 'ok';
-            $result['data']["isAdmin"] = true;
-        } else {
-            $result["status"] = 'ok';
-            $result['data']["isAdmin"] = false;
-        }
-
-        if ($result["status"] == "ok")
-            return $result["data"];
-        
-        return null;
-    }
-
-
     public function info()
     {
-        /*$authData = $this->getAuthData($this->input);
-        if (!$authData) {
-            $this->error = "Проект не найден или не активен!";
-            return null;
-        }
-        */
-
         try {
-            /*if ($authData["isAdmin"]) {
-                $data['userDisplay'] = 'Администратор';
-                $data['isAdmin'] = true;
-            } else {*/
-                $u = new DB("se_user", "su");
-                $u->select('su.id, su.person_name displayName, is_super_admin');
-                $u->where('su.is_active=1 AND username="?"', $this->input["login"]);
-                $u->andWhere('su.password="?"', strtolower($this->input["hash"]));
-                $result = $u->fetchOne();
-                if (!empty($result)) {
-                    $data['isAdmin'] = $result["isSuperAdmin"];
-                    $data['userDisplay'] = $result["displayName"];
-                    $data['idUser'] = $result["id"];
-                } else {
-                    $this->error = 'Неправильное имя пользователя или пароль!';
-                    throw new Exception($this->error);
-                }
-            //}
+			$u = new DB("se_user", "su");
+			$u->select('su.id, su.person_name displayName, is_super_admin');
+			$u->where('su.is_active=1 AND username="?"', $this->input["login"]);
+			$u->andWhere('su.password="?"', strtolower($this->input["hash"]));
+			$result = $u->fetchOne();
+			if (!empty($result)) {
+				$data['isAdmin'] = $result["isSuperAdmin"];
+				$data['userDisplay'] = $result["displayName"];
+				$data['idUser'] = $result["id"];
+			} else {
+				$this->error = 'Неправильное имя пользователя или пароль!';
+				throw new Exception($this->error);
+			}
 
             $authData['seFolder'] = 'www';
 
