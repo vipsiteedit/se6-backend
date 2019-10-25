@@ -1,0 +1,50 @@
+php_flag display_startup_errors off
+php_flag display_errors off
+php_flag html_errors off
+php_flag log_errors on
+php_flag ignore_repeated_errors off
+php_flag ignore_repeated_source off
+php_flag report_memleaks on
+php_flag track_errors on
+php_value docref_root 0
+php_value docref_ext 0
+#php_value error_log  /home/e/edgestile/rusmilltour.e-stile.ru/public_html/PHP_errors.log
+php_value error_reporting 2047
+php_value log_errors_max_len 0
+php_value session.save_handler files
+php_value session.save_path /tmp/php_sess
+
+DirectoryIndex index.php
+AddDefaultCharset utf-8
+
+
+<Files .htaccess>
+order allow,deny
+deny from all
+</Files>
+
+
+#Options +FollowSymlinks
+RewriteEngine On
+RewriteBase /
+
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !/www
+RewriteCond %{REQUEST_FILENAME} !/(sitemap\.xml|robots.txt)
+RewriteRule .*\.([^\.]+)$ /www/$0
+
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !/www/
+RewriteRule ^(.*) index.php
+
+
+php_flag display_startup_errors on
+php_flag display_errors on
+php_flag html_errors on
+
+#php_value docref_root 0
+#php_value docref_ext 0
+#php_flag register_globals off
+#php_flag session.bug_compat_42 off
