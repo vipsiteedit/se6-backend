@@ -5,8 +5,7 @@ error_reporting(E_ALL);
 ini_set('log_errors', 'On');
 ini_set('error_log', $_SERVER["DOCUMENT_ROOT"] . '/api/php_errors.log');
 
-$allowedMethods = array('FETCH', 'POST', 'DELETE', 'SAVE', 'INFO', 'GET', 'ADDPRICE', 'TRANSLIT', 'UPLOAD',
-        'CHECKNAMES', 'SORT', 'EXPORT', 'IMPORT', 'LOGOUT', 'EXEC','ITEMS');
+$allowedMethods = array('POST', 'DELETE', 'GET');
 $allowedMethods = implode(",", $allowedMethods);
 
 $headers = getallheaders();
@@ -29,7 +28,7 @@ function writeLog($data)
     if (!is_string($data)) {
         $data = print_r($data, true);
     }
-    $file = fopen(API_ROOT. "debug.log", "a+");
+    $file = fopen(API_ROOT . "debug.log", "a+");
     $data = date('[Y-m-d H:i:s] ') . $data . "\n";
     fputs($file, $data);
     fclose($file);
@@ -41,9 +40,21 @@ require_once API_ROOT . "vendor/autoload.php";
 
 include API_ROOT . "version.php";
 
-$apiMethod = $_SERVER['REQUEST_METHOD'];
+$method = $_SERVER['REQUEST_METHOD'];
 $apiClass = parse_url($_SERVER["REQUEST_URI"]);
-$apiClass = str_replace("api/", "", trim($apiClass['path'], "/"));
+$api = str_replace("api/", "", trim($apiClass['path'], "/"));
+if (strpos($api, 'Auth') === 0) {
+    list($apiClass, $apiMethod) = explode("/", $api);
+} else {
+    list($apiPath, $apiClass, $apiMethod) = explode("/", $api);
+    $apiClass = $apiPath . "/" . $apiClass;
+}
+if (empty($apiMethod)) {
+    if ($method == "GET")
+        $apiMethod = "get";
+    else $apiMethod = "post";
+}
+
 
 if (strpos($apiClass, "/Auth"))
     $apiClass = "Auth";
@@ -77,6 +88,7 @@ if ($apiClass == "Auth" && strtolower($apiMethod) == "logout") {
     exit;
 }
 
+
 if ($apiClass == "Auth" && strtolower($apiMethod) == "get") {
     if (empty($_SESSION['isAuth'])) {
         header("HTTP/1.1 401 Unauthorized");
@@ -87,9 +99,9 @@ if ($apiClass == "Auth" && strtolower($apiMethod) == "get") {
 
 $dbConfig = require DOCUMENT_ROOT . '/apps/config/config.db.php';
 
-if (empty($dbConfig)){
-    header("HTTP/1.1 401 Unauthorized");
-    echo 'Сессия истекла! Необходима авторизация!';
+if (empty($dbConfig)) {
+    header("HTTP/1.1 501 Not Implemented");
+    echo 'Нет базы данных!';
     exit;
 }
 
@@ -105,21 +117,21 @@ $apiObject = $apiClass;
 $apiClass = "\\SE\\" . str_replace("/", "\\", $apiClass);
 
 if (!class_exists($apiClass)) {
-    header("HTTP/1.1 501 Not Implemented");
+    //header("HTTP/1.1 501 Not Implemented");
     echo "Объект '{$apiObject}' не найден!";
     exit;
 }
 
 if (!method_exists($apiClass, $apiMethod)) {
-    header("HTTP/1.1 501 Not Implemented");
+    //header("HTTP/1.1 501 Not Implemented");
     echo "Метод'{$apiMethod}' не поддерживается!";
     exit;
 }
 
 $apiObject = new $apiClass($phpInput);
-
 if ($apiObject->initConnection($dbConfig)) {
-    if ($apiClass && $apiClass != "\SE\Auth"){
+
+    if ($apiClass && $apiClass != "\SE\Auth") {
         $apiObject->initPath();
     }
     $apiObject->$apiMethod();
